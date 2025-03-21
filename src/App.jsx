@@ -9,11 +9,14 @@ import Layout from "./Components/Layout"
 
 const router = createBrowserRouter(createRoutesFromElements(
   <Route path="/" element={<Layout />}>
-      <Route path="/referral" element={<Adminpanel />} />
-      <Route path="/referral-fill" element={<AdminpanelFill />} />
-      <Route path="/add-referral" element={<AddReferralForm/>} />
-      <Route path="/view-referral" element={<AdminViewReferral/>} />
-      <Route path="/edit-referral" element={<AdminEditReferal />} />
+    <Route path="new-patient" element={<Adminpanel />} />
+    <Route path="patient-master" element={<Adminpanel />} />
+    <Route path="services" element={<Adminpanel />} />
+    <Route path="referral" element={<Adminpanel />} />
+    <Route path="referral-fill" element={<AdminpanelFill />} />
+    <Route path="add-referral" element={<AddReferralForm />} />
+    <Route path="view-referral" element={<AdminViewReferral />} />
+    <Route path="edit-referral" element={<AdminEditReferal />} />
   </Route>
 ))
 function App() {

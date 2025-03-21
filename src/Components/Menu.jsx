@@ -21,34 +21,26 @@ const Menu = () => {
       </div>
       <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
         <NavLink
-          to={"/"}
-          className={(isActive) =>
-            "nav-link" + (!isActive ? " unselected" : "text-red-900")
-          }
+          to={"new-patient"}
+          className={({ isActive }) => isActive && "font-extrabold text-green-600"} // Will Only Apply NavLink Styles When the pathname matches the string in the "to" prop
         >
           New Patient Registration
         </NavLink>
         <NavLink
-          to={"/"}
-          className={(isActive) =>
-            "nav-link" + (!isActive ? " unselected" : "")
-          }
+          to={"patient-master"}
+          className={({ isActive }) => isActive && "font-extrabold text-green-600"}
         >
           Patient Master
         </NavLink>
         <NavLink
-          to={"/"}
-          className={(isActive) =>
-            "nav-link" + (!isActive ? " unselected" : "")
-          }
+          to={"services"}
+          className={({ isActive }) => isActive && "font-extrabold text-green-600"}
         >
           Services
         </NavLink>
         <NavLink
-          to={"/"}
-          className={(isActive) =>
-            "nav-link" + (!isActive ? " unselected" : "")
-          }
+          to={"referral"}
+          className={({ isActive }) => isActive && "font-extrabold text-green-600"}
         >
           Referals
         </NavLink>
