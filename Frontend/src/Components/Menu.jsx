@@ -77,7 +77,7 @@ const Menu = () => {
         <h1 className="text-lg font-bold"></h1>
         <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
           <NavLink
-            to={"new-patient-registration"}
+            to={"/reception/new-patient-registration"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -85,7 +85,7 @@ const Menu = () => {
             New Patient Registration
           </NavLink>
           <NavLink
-            to={"patient-master"}
+            to={"/reception/patient-master"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -93,7 +93,7 @@ const Menu = () => {
             Patient Master
           </NavLink>
           <NavLink
-            to={"services"}
+            to={"/reception/services"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -101,7 +101,7 @@ const Menu = () => {
             Services
           </NavLink>
           <NavLink
-            to={"referral"}
+            to={"/reception/referral"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -126,7 +126,7 @@ const Menu = () => {
         </div>
         <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
           <NavLink
-            to={"op-queue"}
+            to={"/doctor/op-queue"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -134,7 +134,7 @@ const Menu = () => {
             OP Queue
           </NavLink>
           <NavLink
-            to={"ip-dashboard"}
+            to={"/doctor/ip-dashboard"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -160,7 +160,7 @@ const Menu = () => {
         </div>
         <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
           <NavLink
-            to={"op-assessment"}
+            to={"/nurse/op-assessment"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -168,12 +168,20 @@ const Menu = () => {
             OP Assessment
           </NavLink>
           <NavLink
-            to={"ip-care-management"}
+            to={"/nurse/ip-care-management"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
           >
             IP care management
+          </NavLink>
+          <NavLink
+            to={"/nurse/admission-note"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            Admission Notes
           </NavLink>
         </div>
       </>
@@ -193,7 +201,7 @@ const Menu = () => {
         </div>
         <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
           <NavLink
-            to={"test-parameters-master"}
+            to={"/lab/test-parameters-master"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }
@@ -201,7 +209,15 @@ const Menu = () => {
             Test Parameters Master
           </NavLink>
           <NavLink
-            to={"lab-orders"}
+            to={"/lab/add-parameter"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            Add Parameters
+          </NavLink>
+          <NavLink
+            to={"/lab/lab-orders"}
             className={({ isActive }) =>
               isActive && "font-extrabold text-[#0D8E83]"
             }

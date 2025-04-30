@@ -137,7 +137,7 @@ export default function Login() {
           {/* Test Users Section */}
           <div className="mt-6 pt-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Test Users</h3>
-            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+            <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
               {mockUsers.map(user => (
                 <div
                   key={user.id}

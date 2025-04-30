@@ -1,14 +1,29 @@
 import ReferralForm from '../../../Components/ReferralForm'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { addReferral } from '../../../api/receptionService'
 
 const AddReferral = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmitSuccess = (response) => {
-    console.log('Referral added successfully:', response);
-    navigate('/referral');
+  const handleSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await addReferral(formData);
+      console.log('Referral added successfully:', response);
+
+      // Navigate back to referrals list
+      navigate('/reception/referral');
+    } catch (err) {
+      console.error('Error adding referral:', err);
+      setError(err.message || 'Failed to add referral. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -16,7 +31,7 @@ const AddReferral = () => {
       <div className="flex justify-between items-center border-b-2 border-gray-400 p-4">
         <h1 className="text-lg font-bold">Add Referral</h1>
         <div className="flex gap-4">
-          <Link to={"/referral"} className='bg-[#F0F2F5] border border-gray-400 px-4 py-0.5 text-sm rounded-lg'>Cancel</Link>
+          <Link to={"/reception/referral"} className='bg-[#F0F2F5] border border-gray-400 px-4 py-0.5 text-sm rounded-lg'>Cancel</Link>
           <button
             type="submit"
             form="referral-form"
@@ -34,7 +49,16 @@ const AddReferral = () => {
         </div>
       </div>
       <div className="h-full p-4 bg-[#FDFDFE]">
-        <ReferralForm id="referral-form" onSubmitSuccess={handleSubmitSuccess} />
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        <ReferralForm
+          id="referral-form"
+          onSubmit={handleSubmit}
+          loading={loading}
+        />
       </div>
     </div>
   )

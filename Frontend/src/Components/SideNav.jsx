@@ -50,7 +50,7 @@ const SideNav = () => {
             {/* Reception Icon - visible to reception and clinicAdmin */}
             {hasRole(['reception', 'clinicAdmin']) && (
               <NavLink
-                to={"new-patient-registration"}
+                to={"/reception"}
                 onClick={() => toggleMenu("reception")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""
@@ -67,7 +67,7 @@ const SideNav = () => {
             {/* Doctor Icon - visible to doctor and clinicAdmin */}
             {hasRole(['doctor', 'clinicAdmin']) && (
               <NavLink
-                to={"op-queue"}
+                to={"/doctor"}
                 onClick={() => toggleMenu("doctors")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""
@@ -84,7 +84,7 @@ const SideNav = () => {
             {/* Lab Icon - visible to lab and clinicAdmin */}
             {hasRole(['lab', 'clinicAdmin']) && (
               <NavLink
-                to={"/test-parameters-master"}
+                to={"/lab"}
                 onClick={() => toggleMenu("lab")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""
@@ -135,7 +135,7 @@ const SideNav = () => {
             {/* Nurse Icon - visible to nurse and clinicAdmin */}
             {hasRole(['nurse', 'clinicAdmin']) && (
               <NavLink
-                to={"op-assessment"}
+                to={"/nurse"}
                 onClick={() => toggleMenu("nurse")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""

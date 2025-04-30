@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { addReferral } from '../api/receptionService';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
+const ReferralForm = ({
+  id = 'referral-form',
+  onSubmit,
+  loading = false,
+  initialData = null,
+  isEditMode = false
+}) => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -22,6 +26,39 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
     email: '',
     phone: ''
   });
+
+  // If initialData is provided (for edit mode), populate the form
+  useEffect(() => {
+    if (initialData) {
+      // Split the name into first, middle, and last name
+      const nameParts = initialData.name.split(' ');
+      let firstName = nameParts[0] || '';
+      let lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      let middleName = '';
+
+      // If there are more than 2 parts, everything in between is the middle name
+      if (nameParts.length > 2) {
+        middleName = nameParts.slice(1, -1).join(' ');
+      }
+
+      setFormData({
+        firstName,
+        middleName,
+        lastName,
+        referralType: initialData.referralType || '',
+        referralCode: initialData.referralCode || '',
+        speciality: initialData.speciality || '',
+        qualification: initialData.qualification || '',
+        hospitalName: initialData.hospitalName || '',
+        address: initialData.address || '',
+        city: initialData.city || '',
+        state: initialData.state || '',
+        pinCode: initialData.pinCode || '',
+        email: initialData.email || '',
+        phone: initialData.phone || ''
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,7 +86,6 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -69,22 +105,16 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
         phone: formData.phone
       };
 
-      // Call API to add referral
-      const response = await addReferral(referralData);
-      console.log('Referral added successfully:', response);
-
-      // Call onSubmitSuccess callback if provided
-      if (onSubmitSuccess) {
-        onSubmitSuccess(response);
+      // Call the onSubmit callback provided by parent component
+      if (onSubmit) {
+        onSubmit(referralData);
       } else {
-        // Fallback to navigate
-        navigate('/referral');
+        // Fallback to navigate if no callback provided
+        navigate('/reception/referral');
       }
     } catch (err) {
-      console.error('Error adding referral:', err);
-      setError(err.message || 'Failed to add referral. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Error in form submission:', err);
+      setError(err.message || 'Form submission failed. Please try again.');
     }
   };
 
@@ -153,12 +183,12 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
                 onChange={handleChange}
                 className="w-full border border-[#D0D5DD] bg-[#F7F9FC] rounded p-2 text-sm"
                 required
-
               >
                 <option value="">Select</option>
-                <option value="Referral type 1">Referral tpe 1</option>
-                <option value="Referral type 2">Referral type 2</option>
-                <option value="Referral type 3">Referral type 3</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Clinic">Clinic</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
@@ -190,6 +220,14 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
                 <option value="Cardiology">Cardiology</option>
                 <option value="Neurology">Neurology</option>
                 <option value="Pediatrics">Pediatrics</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Ophthalmology">Ophthalmology</option>
+                <option value="ENT">ENT</option>
+                <option value="Gynecology">Gynecology</option>
+                <option value="Urology">Urology</option>
+                <option value="Psychiatry">Psychiatry</option>
+                <option value="General Medicine">General Medicine</option>
+                <option value="General Surgery">General Surgery</option>
               </select>
             </div>
 
@@ -257,9 +295,35 @@ const ReferralForm = ({ id = 'referral-form', onSubmitSuccess }) => {
                 onChange={handleChange}
                 className="w-full border border-[#D0D5DD] bg-[#F7F9FC] rounded p-2 text-sm"
               >
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Karnataka">Karnataka</option>
+                <option value="">Select</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Goa">Goa</option>
                 <option value="Gujarat">Gujarat</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
                 <option value="Delhi">Delhi</option>
               </select>
             </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { isAuthenticated, getUserRole, logout, getCurrentUser } from '../api/authService';
+import { isAuthenticated, getUserRole, logout, getCurrentUser, fetchCurrentUser } from '../api/authService';
 
 // Create the authentication context
 const AuthContext = createContext();
@@ -16,19 +16,29 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on initial load
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       // Authentication flow
       const authenticated = isAuthenticated();
       setIsLoggedIn(authenticated);
 
       if (authenticated) {
-        const role = getUserRole();
-        const user = getCurrentUser();
+        try {
+          // First set from localStorage (for immediate UI update)
+          const cachedRole = getUserRole();
+          const cachedUser = getCurrentUser();
 
-        setUserRole(role || 'guest');
-        setCurrentUser(user || { role: role || 'guest' });
+          setUserRole(cachedRole || 'guest');
+          setCurrentUser(cachedUser || { role: cachedRole || 'guest' });
 
-        console.log('User authenticated:', { role, user });
+          // For mock authentication, we don't need to fetch fresh data
+          // Just log the current user info
+          console.log('User authenticated from localStorage:', {
+            role: cachedRole,
+            user: cachedUser
+          });
+        } catch (error) {
+          console.error('Error getting user data:', error);
+        }
       } else {
         setUserRole('guest');
         setCurrentUser(null);
@@ -47,6 +57,8 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(userData);
     setIsLoggedIn(true);
     setUserRole(userData.role || 'guest');
+
+    console.log('User logged in via context:', userData);
   };
 
   // Logout function

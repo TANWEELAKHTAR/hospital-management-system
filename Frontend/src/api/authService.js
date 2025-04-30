@@ -1,4 +1,4 @@
-// We're using mock data for now, but in a real app we would use the API
+// We're using mock data for testing
 // import api from './api';
 import { findUser, findUserByName } from '../utils/mockUsers';
 
@@ -41,6 +41,7 @@ export const login = async (credentials) => {
       role: mockResponse.role
     }));
 
+    console.log('User logged in:', mockResponse);
     return mockResponse;
   } catch (error) {
     console.error('Login error:', error);
@@ -68,7 +69,7 @@ export const getUserRole = () => {
   return localStorage.getItem('userRole') || 'guest';
 };
 
-// Get current user info
+// Get current user info from localStorage (cached)
 export const getCurrentUser = () => {
   try {
     const userInfo = localStorage.getItem('userInfo');
@@ -77,7 +78,32 @@ export const getCurrentUser = () => {
     }
     return null;
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    console.error('Error getting user profile from localStorage:', error);
     return null;
+  }
+};
+
+// Fetch current user info from API (mock implementation)
+export const fetchCurrentUser = async () => {
+  try {
+    // For testing purposes, we'll just return the cached user info
+    // In a real application, you would make an API call here
+    // const response = await api.get('/user/profile');
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Get user info from localStorage
+    const userInfo = getCurrentUser();
+
+    if (!userInfo) {
+      throw new Error('User not found');
+    }
+
+    return userInfo;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    // Fall back to cached data
+    return getCurrentUser();
   }
 };
