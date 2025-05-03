@@ -101,8 +101,8 @@ const SideNav = () => {
             {/* Inventory Icon - visible to inventory and clinicAdmin */}
             {hasRole(['inventory', 'clinicAdmin']) && (
               <NavLink
-                to={"/"}
-                onClick={() => toggleMenu("")}
+                to={"/inventory"}
+                onClick={() => toggleMenu("inventory")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""
                 }
@@ -188,7 +188,7 @@ const SideNav = () => {
           {/* Logout button */}
           <button
             onClick={handleLogout}
-            className="focus:outline-none"
+            className="focus:outline-none cursor-pointer"
           >
             <img
               className="w-8 h-8 object-cover"

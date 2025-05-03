@@ -26,6 +26,19 @@ import Unauthorized from "./Pages/Unauthorized/Unauthorized"
 import NotFound from "./Pages/NotFound/NotFound"
 import ProtectedRoute from "./Components/ProtectedRoute"
 import Dashboard from "./Pages/Dashboard/Dashboard"
+import ManufacturerData from "./Pages/Inventory/ManufacturerData"
+import SupplierDistributorData from "./Pages/Inventory/SupplierDistributorData"
+import AddMaterialDrug from "./Pages/Inventory/MaterialDrug/AddMaterialDrug"
+import MaterialDrug from "./Pages/Inventory/MaterialDrug/MaterialDrug"
+import EditMaterialDrug from "./Pages/Inventory/MaterialDrug/EditMaterialDrug"
+import ViewMaterialDrug from "./Pages/Inventory/MaterialDrug/ViewMaterialDrug"
+import StockEntry from "./Pages/Inventory/StockEntry/StockEntry"
+import AddStockEntry from "./Pages/Inventory/StockEntry/AddStockEntry"
+import EditStockEntry from "./Pages/Inventory/StockEntry/EditStockEntry"
+import ViewStockEntry from "./Pages/Inventory/StockEntry/ViewStockEntry"
+import StockAdjustments from "./Pages/Inventory/StockAdjustments/StockAdjustments"
+import AddStockAdjustments from "./Pages/Inventory/StockAdjustments/AddStockAdjustments"
+import StockMigration from "./Pages/Inventory/StockMigration/StockMigration"
 
 
 
@@ -84,6 +97,25 @@ const router = createBrowserRouter(createRoutesFromElements(
           <Route index element={<TestParameterMaster/>} />
           <Route path="test-parameters-master" element={<TestParameterMaster/>}/>
           <Route path="add-parameter" element={<AddParameters/>}/>
+        </Route>
+      </Route>
+      {/* Inventory routes - require 'inventory' role */}
+      <Route element={<ProtectedRoute requiredRoles={['inventory', 'clinicAdmin']} />}>
+        <Route path="inventory">
+          <Route index element={<ManufacturerData/>} />
+          <Route path="manufacturer-data" element={<ManufacturerData/>}/>
+          <Route path="supplier-distributor-data" element={<SupplierDistributorData/>}/>
+          <Route path="material-drug" element={<MaterialDrug/>}/>
+          <Route path="add-material-drug" element={<AddMaterialDrug/>}/>
+          <Route path="edit-material-drug/:id" element={<EditMaterialDrug/>}/>
+          <Route path="view-material-drug/:id" element={<ViewMaterialDrug/>}/>
+          <Route path="stock-entry" element={<StockEntry/>}/>
+          <Route path="add-stock-entry" element={<AddStockEntry/>}/>
+          <Route path="edit-stock-entry/:id" element={<EditStockEntry/>}/>
+          <Route path="view-stock-entry/:id" element={<ViewStockEntry/>}/>
+          <Route path="stock-adjustments" element={<StockAdjustments/>}/>
+          <Route path="add-stock-adjustment" element={<AddStockAdjustments/>}/>
+          <Route path="stock-migration" element={<StockMigration/>}/>
         </Route>
       </Route>
 

@@ -4,7 +4,7 @@ const drugSchema = new mongoose.Schema({
     name: {
         type: String,
     },
-    molecue : {
+    molecule : {
         type : String,
     },
     manufacturer : {

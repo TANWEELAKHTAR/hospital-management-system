@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 // Use environment variable or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+// Log the API URL to help with debugging
+console.log('API URL being used:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -21,11 +24,22 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // For development/testing with mock authentication
+      // This is a temporary solution until real authentication is implemented
+
+      // For development, use a simple mock token that the backend will recognize
+      // This is a special token that our modified backend will accept
+      const mockToken = 'mock-token-for-development';
+
+      config.headers.Authorization = `Bearer ${mockToken}`;
+      console.log('Using mock token for authentication:', `Bearer ${mockToken}`);
     }
 
     // Log outgoing requests in development
     if (import.meta.env.DEV) {
       console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`, config.data || '');
+      console.log('Request headers:', config.headers);
     }
 
     return config;
