@@ -38,6 +38,13 @@ export const mockUsers = [
     email: 'lab@hospital.com',
     password: 'lab123',
     role: 'lab'
+  },
+  {
+    id: 6,
+    name: 'Pharmacy Staff',
+    email: 'pharmacy@hospital.com',
+    password: 'pharmacy123',
+    role: 'pharmacy'
   }
 ];
 

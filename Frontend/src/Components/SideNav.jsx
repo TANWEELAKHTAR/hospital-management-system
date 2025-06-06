@@ -118,8 +118,8 @@ const SideNav = () => {
             {/* Pharmacy Icon - visible to pharmacy and clinicAdmin */}
             {hasRole(['pharmacy', 'clinicAdmin']) && (
               <NavLink
-                to={""}
-                onClick={() => toggleMenu("")}
+                to={"/pharmacy"}
+                onClick={() => toggleMenu("pharmacy")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""
                 }
@@ -148,11 +148,44 @@ const SideNav = () => {
                 />
               </NavLink>
             )}
+            {/* otscheduler Icon - visible to suegical and clinicAdmin */}
+            {hasRole(['otscheduler', 'clinicAdmin']) && (
+              <NavLink
+                to={"/otscheduler"}
+                onClick={() => toggleMenu("otscheduler")}
+                className={({ isActive }) =>
+                  isActive ? "font-extrabold text-[#0D8E83]" : ""
+                }
+              >
+                <img
+                  className="w-7 h-7 object-cover "
+                  src="images/surgical.svg"
+                  alt="Nurse"
+                />
+              </NavLink>
+            )}
+      
+            {/* Radiology Icon - visible to suegical and clinicAdmin */}
+            {hasRole(['radiology', 'clinicAdmin']) && (
+              <NavLink
+                to={"/radiology"}
+                onClick={() => toggleMenu("")}
+                className={({ isActive }) =>
+                  isActive ? "font-extrabold text-[#0D8E83]" : ""
+                }
+              >
+                <img
+                  className="w-7 h-7 object-cover "
+                  src="images/rib_cage.svg"
+                  alt="Nurse"
+                />
+              </NavLink>
+            )}
 
             {/* Billing Icon - visible to billing and clinicAdmin */}
             {hasRole(['billing', 'clinicAdmin']) && (
               <NavLink
-                to={"/"}
+                to={"/billing"}
                 onClick={() => toggleMenu("")}
                 className={({ isActive }) =>
                   isActive ? "font-extrabold text-[#0D8E83]" : ""

@@ -63,7 +63,7 @@ const Menu = () => {
   const menuContents = {
     reception: (
       <>
-        <div className="flex justify-between items-center border-b-2 border-gray-400 p-4 border-r-2">
+        <div className="flex  justify-between items-center border-b-2 border-gray-400 p-4 border-r-2 ">
           <h1 className="text-lg font-bold">Reception</h1>
 
           <button onClick={handleClose} className="cursor-pointer">
@@ -292,6 +292,97 @@ const Menu = () => {
         </div>
       </>
     ),
+    pharmacy: (
+      <>
+        <div className="flex justify-between items-center border-b-2 border-gray-400 p-4 border-r-2">
+          <h1 className="text-lg font-bold">Pharmacy</h1>
+
+          <button onClick={handleClose} className="cursor-pointer">
+            <img
+              className="h-6 w-6 object-cover"
+              src="/images/close.svg"
+              alt=""
+            />
+          </button>
+        </div>
+        <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
+          <NavLink
+            to={"/pharmacy/op-prescription"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            OP Prescription
+          </NavLink>
+          <NavLink
+            to={"/pharmacy/unregistred-patient"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            Unregistred Patient
+           </NavLink>
+          <NavLink
+            to={"/pharmacy/ip-prescription"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            IP Prescription
+          </NavLink>
+          <NavLink
+            to={"/pharmacy/returns"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            Returns
+          </NavLink>
+        </div>
+      </>
+    ),
+    otscheduler: (
+      <>
+        <div className="flex justify-between items-center border-b-2 border-gray-400 p-4 border-r-2">
+          <h1 className="text-lg font-bold">OT scheduler</h1>
+
+          <button onClick={handleClose} className="cursor-pointer">
+            <img
+              className="h-6 w-6 object-cover"
+              src="/images/close.svg"
+              alt=""
+            />
+          </button>
+        </div>
+        <div className="p-4 space-y-4 border-r-2 border-gray-400 h-full flex flex-col">
+          <NavLink
+            to={"/scheduler/ot-setup"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            OT setup
+          </NavLink>
+          <NavLink
+            to={"/scheduler/ot-scheduler"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            OT schedule
+          </NavLink>
+          <NavLink
+            to={"/scheduler/completed-cases"}
+            className={({ isActive }) =>
+              isActive && "font-extrabold text-[#0D8E83]"
+            }
+          >
+            Completed cases
+          </NavLink>
+        </div>
+      </>
+    ),
+   
   };
 
   return <div className="w-64 menu">{menuContents[activeMenu]}</div>;

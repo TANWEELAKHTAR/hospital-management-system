@@ -39,6 +39,26 @@ import ViewStockEntry from "./Pages/Inventory/StockEntry/ViewStockEntry"
 import StockAdjustments from "./Pages/Inventory/StockAdjustments/StockAdjustments"
 import AddStockAdjustments from "./Pages/Inventory/StockAdjustments/AddStockAdjustments"
 import StockMigration from "./Pages/Inventory/StockMigration/StockMigration"
+import Otscheduler from "./Pages/OT/OTscheduler"
+import Radiology from "./Pages/Radiology/Radiology"
+import Billing from "./Pages/Billing/Billing"
+import IPBill from "./Components/Billing/IPBill"
+import AppointmentBill from "./Components/Billing/AppointmentBill"
+import RadiologyReport from "./Components/Radiology/RadiologyReport"
+import OTsetupform from "./Components/OT/OTsatupform"
+import PatientBillingDashboard from "./Components/Billing/PatientBilling"
+import RadiologyReportEditor from "./Components/Radiology/RadiologyReportEditor"
+import CompletedCases from "./Components/Radiology/RadiologyComplateCase"
+import RadiologyFilled from "./Components/Radiology/RadiologyReport"
+import RadiologyComplateCaseViews from "./Components/Radiology/RadiologyComplateCaseViews"
+import RadiologyTemplates from "./Components/Radiology/RadiologyTemplates"
+import CreateTemplate from "./Components/Radiology/RadiologyTemplatesFilled"
+import SavedTemplates from "./Components/Radiology/SavedTemplates"
+import RadiologySavedTemplateDetailViews from "./Components/Radiology/RadiologySavedTemplateDetailViews"
+import OPPrescription from "./Pages/Pharmacy/OPPrescription"
+import IPPrescription from "./Pages/Pharmacy/IPPrescription"
+import UnregisteredPatient from "./Pages/Pharmacy/UnregisteredPatient"
+import Returns from "./Pages/Pharmacy/Returns"
 
 
 
@@ -90,6 +110,30 @@ const router = createBrowserRouter(createRoutesFromElements(
           <Route path="admission-note-patient/:id" element={<AdmissionNotePatient/>}/>
         </Route>
       </Route>
+      {/* otscheduler routes - require 'otscheduler' role */}
+      <Route element={<ProtectedRoute requiredRoles={['otscheduler', 'clinicAdmin']} />}>
+        <Route path="otscheduler">
+          <Route index element={<Otscheduler/>} />
+          <Route path="ot-satupform" element={<OTsetupform/>}/>
+        
+        </Route>
+      </Route>
+
+      {/* Radiology routes - require 'radiology' role */}
+      <Route element={<ProtectedRoute requiredRoles={['radiology', 'clinicAdmin']} />}>
+        <Route path="radiology">
+          <Route index element={<Radiology/>} />
+          <Route path="open-case" element={<RadiologyReport/>}/>
+          <Route path="report-filling-form-editor" element={<RadiologyReportEditor/>}/>
+          <Route path="complate-case" element={<CompletedCases/>}/>
+          
+          <Route path="radiology-complate-case-views" element={<RadiologyComplateCaseViews/>}/>
+          <Route path="radiology-templates" element={<RadiologyTemplates/>}/>
+          <Route path="create-templates" element={<CreateTemplate/>}/>
+          <Route path="saved-templates" element={<SavedTemplates/>}/>
+          <Route path="radiology-saved-templates-detail-views" element={<RadiologySavedTemplateDetailViews/>}/>
+        </Route>
+      </Route>
 
       {/* Lab routes - require 'lab' role */}
       <Route element={<ProtectedRoute requiredRoles={['lab', 'clinicAdmin']} />}>
@@ -116,6 +160,27 @@ const router = createBrowserRouter(createRoutesFromElements(
           <Route path="stock-adjustments" element={<StockAdjustments/>}/>
           <Route path="add-stock-adjustment" element={<AddStockAdjustments/>}/>
           <Route path="stock-migration" element={<StockMigration/>}/>
+        </Route>
+      </Route>
+
+    {/* Billing routes - require 'billing' role */}
+    <Route element={<ProtectedRoute requiredRoles={['billing', 'clinicAdmin']} />}>
+        <Route path="billing">
+          <Route index element={<Billing/>} />
+          <Route path="bill-list-view" element={<IPBill/>} />
+          <Route path="bill" element={<AppointmentBill/>} />
+          <Route path="patient-bill" element={<PatientBillingDashboard/>} />
+        </Route>
+      </Route>
+
+      {/* Pharmacy routes - require 'pharmacy' role */}
+      <Route element={<ProtectedRoute requiredRoles={['pharmacy', 'clinicAdmin']} />}>
+        <Route path="pharmacy">
+          <Route index element={<OPPrescription/>} />
+          <Route path="op-prescription" element={<OPPrescription/>} />
+          <Route path="unregistred-patient" element={<UnregisteredPatient/>} />
+          <Route path="ip-prescription" element={<IPPrescription/>} />
+          <Route path="returns" element={<Returns/>} />
         </Route>
       </Route>
 
