@@ -16,9 +16,9 @@ const supplierSchema = new Schema(
             enum: ["Local", "Non-local"],
         },
         phoneNumber: {
-            type: String, // Changed from Number to String to handle phone numbers better
+            type: Number,
             required: true,
-            // Removed unique constraint for development
+            unique: true,
         },
         address: {
             type: String,

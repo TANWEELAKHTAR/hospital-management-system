@@ -7,6 +7,10 @@ const patientAdmitSchema = new Schema(
             ref: "Patient", // Reference to the Patient model
             required: true,
         },
+        // ipNumber: {
+        //     type:Number,
+        //     required: true,
+        // },
         patientDetails: {
             mrn: { type: Number, required: true },
             name: { type: String, required: true },

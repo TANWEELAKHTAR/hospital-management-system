@@ -102,201 +102,138 @@ export const saveStock = async (req, res) => {
 
 export const addStock = async (req, res) => {
     try {
-        console.log("Request body:", req.body);
-        const { supplier, invoiceNumber, invoiceDate, dueDate, itemDetails, status, totalItems: providedTotalItems, totalValue: providedTotalValue } = req.body;
+        const { supplier, invoiceNumber, invoiceDate, dueDate, itemDetails } = req.body;
 
         if (!supplier || !invoiceNumber || !invoiceDate || !dueDate || !itemDetails || itemDetails.length === 0) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        // For development, use a hardcoded clinic ID if not available
-        const clinicId = req.user?.id || '123456789012345678901234';
-        console.log("Using clinicId:", clinicId);
+        // Fetch Supplier ID
+        const supplierData = await Supplier.findOne({ name: supplier, clinicId: req.user.id });
+        if (!supplierData) return res.status(404).json({ message: "Supplier not found" });
 
-        // Find supplier by name without clinicId filter for development
-        const supplierData = await Supplier.findOne({ name: supplier });
-        if (!supplierData) {
-            console.log("Supplier not found, creating a new one");
-            // Create a new supplier if not found (for development purposes)
-            const newSupplier = new Supplier({
-                name: supplier,
-                gstNumber: "DUMMY" + Date.now(),
-                regionType: "Local",
-                phoneNumber: "1234567890",
-                address: "Development Address",
-                dueDate: "45 days after bill date",
-                clinicId
-            });
-            await newSupplier.save();
-            console.log("Created new supplier:", newSupplier);
-            var supplierToUse = newSupplier;
-        } else {
-            console.log("Found supplier:", supplierData);
-            var supplierToUse = supplierData;
-        }
+        // **Fetch the latest invoice number for this clinic**
+        const invoiceData = await InvoiceNumber.findOne({ clinicId: req.user.id });
 
-        // Get latest invoice number without clinicId filter for development
-        let invoiceData = await InvoiceNumber.findOne();
-        if (!invoiceData) {
-            // Create new invoice number if not exists
-            invoiceData = new InvoiceNumber({
-                invoiceNumber: 1000,
-                clinicId
-            });
-            await invoiceData.save();
-            console.log("Created new invoice number:", invoiceData);
-        }
+        if (!invoiceData) return res.status(404).json({ message: "Invoice record not found" });
 
-        // Increment invoice number
-        const newInvoiceNumber = parseInt(invoiceNumber) || (invoiceData.invoiceNumber + 1);
-        console.log("New invoice number:", newInvoiceNumber);
+        let latestInvoiceNumber = invoiceData.invoiceNumber;  // Current latest invoice
+
+        // Ensure sequential invoice numbers
+        let newInvoiceNumber = invoiceNumber === latestInvoiceNumber ? invoiceNumber + 1 : latestInvoiceNumber + 1;
 
         // Calculate totals
         let totalGST = 0;
+        const totalItems = itemDetails.reduce((acc, item) => acc + item.quantity, 0);
+        const totalValue = itemDetails.reduce((acc, item) => acc + item.amount, 0);
 
-        // Use provided values or calculate them
-        const totalItems = providedTotalItems || itemDetails.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0);
-        const totalValue = providedTotalValue || itemDetails.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
+        // Calculate GST by fetching it from the Drug schema
+        for (const item of itemDetails) {
+            const drugData = await Drug.findOne({ name: item.drug, clinicId: req.user.id });
 
-        // Skip GST calculation for development
-        console.log("Calculated totals:", { totalItems, totalValue, totalGST });
+            if (!drugData) {
+                return res.status(404).json({ message: `Drug '${item.drug}' not found` });
+            }
 
-        // Create Stock Entry with updated invoice number
+            const gstAmount = (item.amount * drugData.gst) / 100;
+            totalGST += gstAmount;
+        }
+
+        // **Create Stock Entry with updated invoice number**
         const stockEntry = new StockEntry({
-            supplier: supplierToUse._id,
+            supplier: supplierData._id,
             invoiceNumber: newInvoiceNumber,
             invoiceDate,
             dueDate,
             itemDetails,
-            status: status || "Verified",
+            status: "Verified",
             totalItems,
             totalValue,
             totalGST,
-            clinicId
+            clinicId: req.user.id,
         });
 
         await stockEntry.save();
-        console.log("Stock entry saved:", stockEntry);
 
-        // Update InvoiceNumber model to reflect new latest invoice
+        // **Update InvoiceNumber model to reflect new latest invoice**
         await InvoiceNumber.updateOne(
-            {},
+            { clinicId: req.user.id },
             { $set: { invoiceNumber: newInvoiceNumber } }
         );
-        console.log("Invoice number updated");
 
         res.status(201).json({ message: "Stock added successfully", stockEntry });
+
     } catch (error) {
-        console.error("Error adding stock:", error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const getAllStocks = async (req, res) => {
     try {
-        // For development, use a hardcoded clinic ID if not available
-        const clinicId = req.user?.id || '123456789012345678901234';
-        console.log('Fetching stocks with clinicId:', clinicId);
-
-        // Fetch all stocks without clinicId filter during development
-        const stocks = await StockEntry.find().populate("supplier");
-        console.log(`Found ${stocks.length} stock entries`);
-
+        const stocks = await StockEntry.find({ clinicId: req.user.id }).populate("supplier");
         res.status(200).json(stocks);
     } catch (error) {
-        console.error('Error fetching stocks:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const getStockById = async (req, res) => {
     try {
-        const { id } = req.params;
-        console.log('Fetching stock with id:', id);
-
-        // For development, don't filter by clinicId
-        const stock = await StockEntry.findById(id).populate("supplier");
+        const stock = await StockEntry.findOne({ _id: req.params.id, clinicId: req.user.id }).populate("supplier");
         if (!stock) return res.status(404).json({ message: "Stock entry not found" });
 
-        console.log('Found stock:', stock);
         res.status(200).json(stock);
     } catch (error) {
-        console.error('Error fetching stock by id:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const updateStock = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { supplier, itemDetails, totalItems: providedTotalItems, totalValue: providedTotalValue } = req.body;
+        const { supplier, itemDetails } = req.body;
 
-        console.log("Updating stock with id:", id);
-        console.log("Update data:", req.body);
-
-        // For development, use a hardcoded clinic ID if not available
-        const clinicId = req.user?.id || '123456789012345678901234';
-
-        // Fetch existing stock entry without clinicId filter for development
-        const existingStock = await StockEntry.findById(id);
+        // Fetch existing stock entry
+        const existingStock = await StockEntry.findOne({ _id: req.params.id, clinicId: req.user.id });
         if (!existingStock) {
             return res.status(404).json({ message: "Stock entry not found" });
         }
 
-        console.log("Found existing stock:", existingStock);
         let updatedData = { ...existingStock.toObject(), ...req.body };
 
         // Convert supplier name to ObjectId if supplier is provided
         if (supplier) {
-            // Find supplier without clinicId filter for development
-            const supplierData = await Supplier.findOne({ name: supplier });
-            if (!supplierData) {
-                console.log("Supplier not found, creating a new one");
-                // Create a new supplier if not found (for development purposes)
-                const newSupplier = new Supplier({
-                    name: supplier,
-                    gstNumber: "DUMMY" + Date.now(),
-                    regionType: "Local",
-                    phoneNumber: "1234567890",
-                    address: "Development Address",
-                    dueDate: "45 days after bill date",
-                    clinicId
-                });
-                await newSupplier.save();
-                console.log("Created new supplier:", newSupplier);
-                updatedData.supplier = newSupplier._id;
-            } else {
-                console.log("Found supplier:", supplierData);
-                updatedData.supplier = supplierData._id;
-            }
+            const supplierData = await Supplier.findOne({ name: supplier, clinicId: req.user.id });
+            if (!supplierData) return res.status(400).json({ message: "Supplier not found" });
+            updatedData.supplier = supplierData._id;
         }
 
         // Recalculate totalItems, totalValue, and totalGST if itemDetails are updated
         if (itemDetails) {
-            // Use provided values or calculate them
-            updatedData.totalItems = providedTotalItems ||
-                itemDetails.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0);
+            updatedData.totalItems = itemDetails.reduce((acc, item) => acc + item.quantity, 0);
+            updatedData.totalValue = itemDetails.reduce((acc, item) => acc + item.amount, 0);
 
-            updatedData.totalValue = providedTotalValue ||
-                itemDetails.reduce((acc, item) => acc + parseFloat(item.amount || 0), 0);
+            // Fetch GST values for each drug
+            const drugs = await Drug.find({
+                name: { $in: itemDetails.map(item => item.drug) },
+                clinicId: req.user.id
+            });
 
-            // Skip GST calculation for development
-            updatedData.totalGST = 0;
+            updatedData.totalGST = itemDetails.reduce((acc, item) => {
+                const drug = drugs.find(d => d.name === item.drug);
+                return acc + (item.amount * (drug?.gst || 0)) / 100;
+            }, 0);
         }
-
-        console.log("Updated data:", updatedData);
 
         // Update stock entry
         const stock = await StockEntry.findByIdAndUpdate(
-            id,
+            req.params.id,
             updatedData,
             { new: true }
         );
 
-        console.log("Stock updated:", stock);
         res.status(200).json({ message: "Stock updated successfully", stock });
+
     } catch (error) {
-        console.error("Error updating stock:", error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -304,24 +241,18 @@ export const updateStock = async (req, res) => {
 
 export const deleteStock = async (req, res) => {
     try {
-        const { id } = req.params;
-        console.log('Deleting stock with id:', id);
-
-        // For development, don't filter by clinicId
-        const stock = await StockEntry.findByIdAndDelete(id);
+        const stock = await StockEntry.findOneAndDelete({ _id: req.params.id, clinicId: req.user.id });
 
         if (!stock) return res.status(404).json({ message: "Stock entry not found" });
 
-        console.log('Deleted stock:', stock);
         res.status(200).json({ message: "Stock deleted successfully" });
     } catch (error) {
-        console.error('Error deleting stock:', error);
         res.status(500).json({ message: error.message });
     }
 };
+    
 
-
-//This api is to fetch the particular drug and its stock
+//This api is to fetch the particular drug and its stock 
 //Because it is needed in the doctor module OP queue section
 export const searchDrug = async (req, res) => {
     try {

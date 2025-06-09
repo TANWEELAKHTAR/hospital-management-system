@@ -40,79 +40,67 @@ export const searchStock = async (req, res) => {
 
 export const addStockAdjustment = async (req, res) => {
     try {
-        console.log("Request body:", req.body);
-        const { itemName, batchNumber, currStock, adjustmentValue, reason } = req.body;
+        const { itemName, batchNumber, adjustmentValue, reason } = req.body;
 
-        // Validate required fields
-        if (!itemName) {
-            return res.status(400).json({ message: "Item name is required" });
+        if (!itemName || !batchNumber || !adjustmentValue || !reason) {
+            return res.status(400).json({ message: "All fields are required" });
         }
 
-        if (!batchNumber) {
-            return res.status(400).json({ message: "Batch number is required" });
-        }
-
-        if (currStock === undefined) {
-            return res.status(400).json({ message: "Current stock is required" });
-        }
-
-        if (adjustmentValue === undefined) {
-            return res.status(400).json({ message: "Adjustment value is required" });
-        }
-
-        if (!reason) {
-            return res.status(400).json({ message: "Reason is required" });
-        }
-
-        // For development, use a hardcoded clinic ID if not available
-        const clinicId = req.user?.id || '123456789012345678901234';
-        console.log("Using clinicId:", clinicId);
-
-        // In a real implementation, we would update the actual stock
-        // For now, we'll just create the adjustment record
-        console.log("Creating stock adjustment record with data:", {
-            itemName,
-            batchNumber,
-            currStock,
-            adjustmentValue,
-            reason,
-            clinicId
+        // Find stock entry with matching drug and batch number
+        const stockEntry = await StockEntry.findOne({
+            "itemDetails.drug": itemName,
+            "itemDetails.batchNumber": batchNumber,
+            clinicId : req.user.id,
         });
 
-        try {
-            // Create a stock adjustment entry
-            const newAdjustment = new StockAdjustment({
-                itemName,
-                batchNumber,
-                currStock: Number(currStock),
-                adjustmentValue: Number(adjustmentValue),
-                reason,
-                clinicId
-            });
-
-            await newAdjustment.save();
-            console.log("Stock adjustment saved:", newAdjustment);
-
-            res.status(201).json({ message: "Stock adjusted successfully", stockAdjustment: newAdjustment });
-        } catch (dbError) {
-            console.error("Database error:", dbError);
-            res.status(500).json({ message: `Database error: ${dbError.message}` });
+        if (!stockEntry) {
+            return res.status(404).json({ message: "Stock entry not found" });
         }
+
+        // Update the stock in itemDetails
+        let updated = false;
+        stockEntry.itemDetails.forEach(item => {
+            if (item.drug === itemName && item.batchNumber === batchNumber) {
+                if (item.quantity + adjustmentValue < 0) {
+                    return res.status(400).json({ message: "Insufficient stock" });
+                }
+                item.quantity += adjustmentValue; // Adjust stock
+                updated = true;
+            }
+        });
+
+        if (!updated) {
+            return res.status(404).json({ message: "Batch number not found in stock" });
+        }
+
+        // Save the updated stock entry
+        await stockEntry.save();
+
+        // Create a stock adjustment entry
+        const newAdjustment = new StockAdjustment({
+            itemName,
+            batchNumber,
+            currStock: stockEntry.itemDetails.find(item => item.drug === itemName && item.batchNumber === batchNumber).quantity,
+            adjustmentValue,
+            reason,
+            clinicId : req.user.id
+        });
+
+        await newAdjustment.save();
+
+        res.status(201).json({ message: "Stock adjusted successfully", newAdjustment });
     } catch (error) {
         console.error("Error adjusting stock:", error);
-        res.status(500).json({ message: `Server error: ${error.message}` });
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
 export const getStockAdjustments = async (req, res) => {
     try {
-        // For development, don't filter by clinicId
-        const stockAdjustments = await StockAdjustment.find().sort({ createdAt: -1 });
-        console.log(`Found ${stockAdjustments.length} stock adjustments`);
-
-        res.status(200).json(stockAdjustments);
+        const stockAdjustments = await StockAdjustment.find({ clinicId: req.user.id });
+        res.json(stockAdjustments);
     } catch (error) {
-        console.error('Error fetching stock adjustments:', error);
-        res.status(500).json({ message: error.message });
+        console.error("Error fetching stock adjustments:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 }

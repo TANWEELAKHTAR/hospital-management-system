@@ -1,4 +1,10 @@
 import Doctor from "../../../../models/clinicAdmin/masterDataConfig/doctor/doctor.model.js";
+import bcrypt from "bcrypt";  
+
+const generateRandomPassword = () => {
+    const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4-digit number
+    return `ClinicUser${randomNumbers}`;
+}; 
 
 const addDoctor = async (req, res) => {
     try {
@@ -34,6 +40,8 @@ const addDoctor = async (req, res) => {
         ) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
+        const rawPassword = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         // Check if doctor with same email already exists
         const existingDoctor = await Doctor.findOne({ email });
@@ -60,6 +68,7 @@ const addDoctor = async (req, res) => {
             emergencyFee,
             validityDays,
             validityVisits,
+            password : hashedPassword,
             clinicId,
         });
 
@@ -69,6 +78,7 @@ const addDoctor = async (req, res) => {
             success: true,
             message: "Doctor added successfully",
             doctor: newDoctor,
+            rawPassword,
         });
     } catch (error) {
         console.error("Error adding doctor:", error);

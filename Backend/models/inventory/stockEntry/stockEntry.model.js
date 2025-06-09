@@ -17,7 +17,7 @@ const stockEntrySchema = new Schema({
     },
     dueDate : {
         type : Date,
-        required : true,
+        required : true, 
     },
     itemDetails : {
         type : [{

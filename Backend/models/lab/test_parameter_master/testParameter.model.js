@@ -1,29 +1,27 @@
 import mongoose, { Schema } from "mongoose";
 
-const testParameterSchema = new Schema(
-    {
-        sectionName: { type: String, required: true },
-        department: { type: String, required: true },
-        group: { type: String, required: true },
-        charge: { type: Number, required: true }, // INR charge
+const NormalRangeSchema = new Schema({
+    gender: { type: String, enum: ["Male", "Female", "All"], required: true },
+    specialCondition: { type: String, default: "" },
+    age: { type: String, required: true },
+    min: { type: Number, required: false },
+    max: { type: Number, required: false },
+});
 
-        testDetails: {
-            testName: { type: String, required: true },
-            group: { type: String, required: true },
-            unit: { type: String, default: "" }, // Optional
-            method: { type: String, required: true },
-            interpretation: { type: String, required: true },
-            charge: { type: Number, required: true }, // INR charge
-        },
-        clinicId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Clinic",
-            required: true,
-        },
+const TestParameterSchema = new Schema({
+    parameter: { type: String, required: true },
+    category: { type: String, required: true },
+    unit: { type: String, required: true },
+    method: { type: String, required: true },
+    normalRanges: [NormalRangeSchema], // Embedded array of normal ranges
+    clinicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Clinic",
+        required: true,
+        index: false,
     },
-    { timestamps: true }
-);
+});
 
-const TestParameter = mongoose.model("TestParameter", testParameterSchema);
+const TestParameter = mongoose.model("TestParameter", TestParameterSchema);
 
 export default TestParameter;

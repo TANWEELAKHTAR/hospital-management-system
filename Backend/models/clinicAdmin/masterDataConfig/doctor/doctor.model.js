@@ -67,6 +67,11 @@ const doctorSchema = new Schema(
             type: Number,
             required: true,
         },
+        password: {
+            type: String,
+            unique: true,
+            required: true,
+        },
         clinicId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Clinic",

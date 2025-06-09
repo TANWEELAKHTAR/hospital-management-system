@@ -2,6 +2,10 @@ import Patient from "../../../models/reception/new_patient_reg/newPatient.model.
 import Service from "../../../models/clinicAdmin/masterDataConfig/service/service.model.js";
 import PatientServices from "../../../models/reception/services/patientServices.model.js";
 import Clinic from "../../../models/superAdmin/clinic.model.js";
+import InvoiceNumber from "../../../models/superAdmin/invoiceNumber.model.js";
+import ConsultationPrint from "../../../models/clinicAdmin/masterDataConfig/printSettings/consultationPrint/consultationPrint.model.js";
+import ServicesBill from "../../../models/billing/servicesBill/servicesBill.model.js";
+
 
 export const getPatientByMRN = async (req, res) => {
     try {
@@ -46,51 +50,159 @@ export const searchServices = async (req, res) => {
 
 export const addServiceToPatient = async (req, res) => {
     try {
-        const { mrn, serviceName, quantity } = req.body;
-        const clinicId = req.user.id;  // Extract clinic ID from logged-in user
+        const { mrn, services } = req.body;
+        const clinicId = req.user.id;  // Logged-in clinic context
 
-        // Find the service based on name and clinic ID
-        const service = await Service.findOne({ name: serviceName, clinicId });
-
-        if (!service) {
-            return res.status(404).json({ message: "Service not found in this clinic" });
+        if (!Array.isArray(services) || services.length === 0) {
+            return res.status(400).json({ message: "No services provided" });
         }
 
-        let patientService = await PatientServices.findOne({ mrn, clinicId });
+        // let patientService = await PatientServices.findOne({ mrn, clinicId });
 
-        if (!patientService) {
-            // If patient does not exist, create a new entry
-            patientService = new PatientServices({
-                mrn,
-                clinicId,
-                addedServices: [{ 
-                    serviceId: service._id, 
-                    quantity, 
-                    totalPrice: service.price * quantity
-                }],
-            });
-        } else {
-            // Check if service already exists
-            const existingService = patientService.addedServices.find(s => s.serviceId.equals(service._id));
+        // if (!patientService) {
+        //     patientService = new PatientServices({
+        //         mrn,
+        //         clinicId,
+        //         addedServices: [],
+        //     });
+        // }
 
-            if (existingService) {
-                existingService.quantity += quantity;  // Increment quantity
-                existingService.totalPrice = existingService.quantity * service.price;
-            } else {
-                patientService.addedServices.push({
-                    serviceId: service._id,
-                    quantity,
-                    totalPrice: service.price * quantity
-                });
+        let billDetailsServices = [];
+        let totalAmount = 0;
+
+        for (const { serviceName, quantity, subCategory } of services) {
+            const service = await Service.findOne({ name: serviceName, subCategory : subCategory, clinicId });
+            if (!service) {
+                return res.status(404).json({ message: `Service '${serviceName}' not found in this clinic` });
             }
+            totalAmount += quantity * service.price;
+
+            //needed for bill-----
+            billDetailsServices.push({
+                serviceName,
+                quantity,
+                price: service.price,
+                totalPrice: quantity * service.price,
+            })
+            //--------
+
+            // const existingService = patientService.addedServices.find(s => s.serviceId.equals(service._id));
+
+            // if (existingService) {
+            //     existingService.quantity += quantity;
+            //     existingService.totalPrice = existingService.quantity * service.price;
+            // } else {
+            //     patientService.addedServices.push({
+            //         serviceId: service._id,
+            //         quantity,
+            //         price: service.price,
+            //         totalPrice: quantity * service.price,
+            //     });
+            // }
         }
 
-        await patientService.save();
-        return res.status(200).json({ message: "Service added successfully", patientService });
+
+        //----NOTE : -------
+        /**
+         * This api is directly generating the bill and all the details needed will be present in it. So i dont see the need of saving the patientService and creating more schemas. We can ignore this part as its not even used anywhere else.
+         */
+
+        // await patientService.save();
+
+        //-------------------------------------Billing area------------
+
+        // Fetch clinic details
+        const clinic = await Clinic.findById(clinicId);
+        if (!clinic) {
+            return res.status(404).json({ message: "Clinic not found" });
+        }
+
+        // Fetch invoice details
+        const invoice = await InvoiceNumber.findOne({ clinicId });
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice details not found" });
+        }
+
+        // Fetch patient details
+
+        const patient = await Patient.findOne({ mrn, clinicId });
+        if (!patient) {
+            return res.status(404).json({ message: "Patient not found" });
+        }
+
+        // Fetch invoice design settings
+        const printSettings = await ConsultationPrint.findOne({ clinicId });
+        if (!printSettings) {
+            return res.status(404).json({ message: "Print settings not found" });
+        }
+
+        // // Extract settings
+        // const { fontSize, spaceBetweenLines } = printSettings.basicSettings;
+        // const { type: headerType, text: headerText, imageUrl: headerImage } = printSettings.bannerHeading.headerBanner;
+        // const { type: footerType, text: footerText, imageUrl: footerImage } = printSettings.footerBanner.footerBanner;
+
+        // Calculate amounts
+        const discount = 100.00;
+        // const gst = 0.18 * totalAmount;    //No gst in services. Gst only in medicines
+        const payableAmount = totalAmount - discount;
+
+        const servicesBill = new ServicesBill({
+            mrn: patient.mrn,
+            clinicDetails: {
+                name: clinic.clinicName,
+                email: clinic.email,
+                address: clinic.address,
+                phone: clinic.phone_number,
+            },
+            invoiceDetails: {
+                invoiceNumber: invoice.invoiceNumber,
+                date: new Date(),
+                type: "Out-Patient Bill",
+            },
+            patientDetails: {
+                name: patient.givenName + " " + patient.middleName + " " + patient.familyName,
+                age: patient.age,
+                gender: patient.gender,
+                mrn: patient.mrn,
+            },
+            billDetails : {
+                services : billDetailsServices,
+                total : totalAmount,
+                discount : discount,
+                payableAmount : payableAmount
+            }
+        });
+
+        // Save appointment bill
+        const bill = await servicesBill.save();
+
+        const newInvoiceNumber = await InvoiceNumber.findOneAndUpdate(
+            { clinicId },
+            { $inc: { invoiceNumber: 1 } },
+            { new: true }
+        );
+        newInvoiceNumber.save();
+
+        //---------------------Billing ends--------
+
+        return res.status(200).json({ 
+            message: "Services added successfully", 
+            // patientService,
+            printSettings : printSettings,
+            bill : bill
+         });
     } catch (error) {
-        res.status(500).json({ message: "Error adding service", error });
+        console.error(error);
+        res.status(500).json({ message: "Error adding services", error });
     }
 };
+
+/*
+    The following apis wont be needed because : 
+    - deleteServiceFromPatient api wont be used after using the new addServiceToPatient api
+    - generateBill will be incorporated into addServiceToPatient itself to reduce number of api calls
+    - updateServiceQuantity wont be neede after the modified addServiceToPatient api
+*/
 
 export const deleteServiceFromPatient = async (req, res) => {
     try {

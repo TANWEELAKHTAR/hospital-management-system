@@ -1,10 +1,7 @@
 import Supplier from "../../../models/inventory/supplier_data/supplier.model.js";
-import mongoose from "mongoose";
 
 const addSupplier = async (req, res) => {
     try {
-        console.log("Request body:", req.body);
-
         const {
             name,
             gstNumber,
@@ -14,8 +11,7 @@ const addSupplier = async (req, res) => {
             city,
             state,
             pinCode,
-            dueDate, // Accept dueDate directly
-            dueDateForBill, // Also accept dueDateForBill from frontend
+            dueDate,
         } = req.body;
 
         // Validate required fields
@@ -23,7 +19,9 @@ const addSupplier = async (req, res) => {
             !name ||
             !gstNumber ||
             !regionType ||
-            !phoneNumber
+            !phoneNumber ||
+            !address ||
+            !dueDate
         ) {
             return res.status(400).json({
                 success: false,
@@ -31,15 +29,31 @@ const addSupplier = async (req, res) => {
             });
         }
 
-        // For development, don't check for existing suppliers
-        // This allows us to create test data more easily
+        // Check if a supplier with the same GST number or phone number already exists
+        const existingSupplier = await Supplier.findOne({
+            $or: [{ gstNumber }, { phoneNumber }],
+        });
 
-        // Get clinicId from user or use a default for development
-        const clinicId = req.user?.id || '123456789012345678901234';
-        console.log("Using clinicId:", clinicId);
+        if (existingSupplier) {
+            return res.status(409).json({
+                success: false,
+                message:
+                    "Supplier with this GST number or phone number already exists.",
+            });
+        }
+        const clinicId = req.user.id;
+        if (!clinicId) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized: Clinic ID not found in user data.",
+            });
+        }
 
-        // Use either dueDate from the request or dueDateForBill
-        const finalDueDate = dueDate || dueDateForBill || "45 days after bill date";
+        // // Calculate dueDate as "45 days after YYYY-MM-DD"
+        // const dueDateObj = new Date(billDate);
+        // dueDateObj.setDate(dueDateObj.getDate() + 45);
+        // const formattedDate = dueDateObj.toISOString().split("T")[0];
+        // const dueDate = `45 days after ${formattedDate}`;
 
         // Create and save the new supplier
         const newSupplier = await Supplier.create({
@@ -47,11 +61,11 @@ const addSupplier = async (req, res) => {
             gstNumber,
             regionType,
             phoneNumber,
-            address: address || "",
-            city: city || "",
-            state: state || "",
-            pinCode: pinCode || "",
-            dueDate: finalDueDate,
+            address,
+            city,
+            state,
+            pinCode,
+            dueDate,
             clinicId,
         });
 
@@ -73,8 +87,7 @@ const addSupplier = async (req, res) => {
 const getSupplier = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log("Fetching supplier with id:", id);
-
+        const clinicId = req.user.id;
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -83,7 +96,7 @@ const getSupplier = async (req, res) => {
             });
         }
 
-        // Find supplier by ID without clinicId filter for development
+        // Find supplier by ID
         const supplier = await Supplier.findById(id);
 
         if (!supplier) {
@@ -92,7 +105,6 @@ const getSupplier = async (req, res) => {
                 .json({ success: false, message: "Supplier not found." });
         }
 
-        console.log("Found supplier:", supplier);
         res.status(200).json({ success: true, data: supplier });
     } catch (error) {
         console.error("Error fetching supplier:", error.message);
@@ -116,36 +128,32 @@ const allSuppliers = async (req, res) => {
             gstNumber,
         } = req.query;
 
-        console.log("Fetching all suppliers");
-
         // Convert page & limit to integers
         page = parseInt(page) || 1;
         limit = parseInt(limit) || 10;
-
-        // Get clinicId from user or use a default for development
-        const clinicId = req.user?.id || '123456789012345678901234';
-        console.log("Using clinicId for fetching suppliers:", clinicId);
-
-        // For development, don't filter by clinicId
-        // This allows us to see all suppliers during development
-        let filter = {};
-
+        const clinicId = req.user.id;
+        // Create a filter object based on query params
+        let filter = { clinicId };
         if (name) filter.name = new RegExp(name, "i"); // Case-insensitive search
         if (regionType) filter.regionType = regionType;
         if (city) filter.city = new RegExp(city, "i");
         if (state) filter.state = new RegExp(state, "i");
         if (gstNumber) filter.gstNumber = gstNumber;
 
-        console.log("Using filter:", filter);
+        // Count total documents for pagination
+        const totalSuppliers = await Supplier.countDocuments(filter);
 
-        // Fetch all suppliers without pagination for development
-        const suppliers = await Supplier.find(filter).sort({ createdAt: -1 });
-
-        console.log(`Found ${suppliers.length} suppliers`);
+        // Fetch filtered & paginated suppliers
+        const suppliers = await Supplier.find(filter)
+            .sort({ createdAt: -1 }) // Newest first
+            .skip((page - 1) * limit)
+            .limit(limit);
 
         res.status(200).json({
             success: true,
-            totalSuppliers: suppliers.length,
+            totalSuppliers,
+            totalPages: Math.ceil(totalSuppliers / limit),
+            currentPage: page,
             data: suppliers,
         });
     } catch (error) {
@@ -163,15 +171,6 @@ const editSupplier = async (req, res) => {
         const { id } = req.params;
         const updateData = req.body;
 
-        console.log("Updating supplier with id:", id);
-        console.log("Update data:", updateData);
-
-        // Handle dueDateForBill field from frontend
-        if (updateData.dueDateForBill && !updateData.dueDate) {
-            updateData.dueDate = updateData.dueDateForBill;
-            delete updateData.dueDateForBill;
-        }
-
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res
@@ -182,8 +181,13 @@ const editSupplier = async (req, res) => {
                 });
         }
 
-        // For development, don't check if supplier exists
-        // This simplifies testing
+        // Check if supplier exists
+        const existingSupplier = await Supplier.findById(id);
+        if (!existingSupplier) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Supplier not found." });
+        }
 
         // Update supplier
         const updatedSupplier = await Supplier.findByIdAndUpdate(
@@ -194,14 +198,6 @@ const editSupplier = async (req, res) => {
                 runValidators: true, // Ensure validation rules are applied
             }
         );
-
-        if (!updatedSupplier) {
-            return res
-                .status(404)
-                .json({ success: false, message: "Supplier not found." });
-        }
-
-        console.log("Updated supplier:", updatedSupplier);
 
         res.status(200).json({
             success: true,

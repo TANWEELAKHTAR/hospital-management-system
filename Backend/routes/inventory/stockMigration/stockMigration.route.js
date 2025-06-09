@@ -5,9 +5,7 @@ import { handleStockMigration, showPreview } from "../../../controllers/inventor
 
 const stockMigrationRouter = express.Router()
 
-// For development, we'll make these routes accessible without authentication
-// In production, you would want to add the authenticateUser middleware back
-stockMigrationRouter.post("/show-preview", upload.single("file"), showPreview);
-stockMigrationRouter.post("/add-stock-migration", upload.single("file"), handleStockMigration);
+stockMigrationRouter.get("/show-preview", upload.single("file"), authenticateUser, showPreview);
+stockMigrationRouter.post("/add-stock-migration", upload.single("file") ,authenticateUser, handleStockMigration);
 
 export default stockMigrationRouter

@@ -4,7 +4,7 @@ const drugSchema = new mongoose.Schema({
     name: {
         type: String,
     },
-    molecule : {
+    molecue : {
         type : String,
     },
     manufacturer : {
@@ -12,6 +12,10 @@ const drugSchema = new mongoose.Schema({
     },
     category : {
         type : String,
+    },
+    refundableMaterial : {
+        type : String,
+        enum : ["Yes", "No"],
     },
     schedule : {
         type : String,
