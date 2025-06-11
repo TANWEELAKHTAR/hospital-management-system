@@ -135,7 +135,7 @@ export default function Login() {
           </div>
 
           {/* Test Users Section */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          {/* <div className="mt-6 pt-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Test Users</h3>
             <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
               {mockUsers.map(user => (
@@ -160,7 +160,7 @@ export default function Login() {
             <div className="text-xs text-gray-500 mt-2">
               Click on a user to fill the login form with their credentials.
             </div>
-          </div>
+          </div> */}
         </form>
       </div>
     </div>
